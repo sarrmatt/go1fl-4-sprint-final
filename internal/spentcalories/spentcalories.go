@@ -33,7 +33,7 @@ func parseTraining(data string) (int, string, time.Duration, error) {
 		return 0, "", 0, fmt.Errorf("неверный формат количества шагов %q: %w", dataSplit[0], err)
 	}
 	if steps <= 0 {
-		return 0, "", 0, fmt.Errorf("ноличество шагов должно быть положительным, получено %d", steps)
+		return 0, "", 0, fmt.Errorf("количество шагов должно быть положительным, получено %d", steps)
 	}
 
 	duration, err := time.ParseDuration(dataSplit[2])
@@ -72,36 +72,33 @@ func TrainingInfo(data string, weight, height float64) (string, error) {
 		return "", err
 	}
 
+	dist := distance(steps, height)
+	speed := meanSpeed(steps, height, duration)
+
+	var calories float64
+
 	switch activityType {
 	case "Ходьба":
-		dist := distance(steps, height)
-		speed := meanSpeed(steps, height, duration)
-		calories, err := WalkingSpentCalories(steps, weight, height, duration)
+		calories, err = WalkingSpentCalories(steps, weight, height, duration)
 		if err != nil {
 			return "", fmt.Errorf("расчёт калорий для ходьбы: %w", err)
 		}
-		return fmt.Sprintf(
-				"Тип тренировки: %s\nДлительность: %.2f ч.\nДистанция: %.2f км.\nСкорость: %.2f км/ч\nСожгли калорий: %.2f\n",
-				activityType, duration.Hours(), dist, speed, calories,
-			),
-			nil
 
 	case "Бег":
-		dist := distance(steps, height)
-		speed := meanSpeed(steps, height, duration)
-		calories, err := RunningSpentCalories(steps, weight, height, duration)
+		calories, err = RunningSpentCalories(steps, weight, height, duration)
 		if err != nil {
 			return "", fmt.Errorf("расчёт калорий для бега: %w", err)
 		}
-		return fmt.Sprintf(
-				"Тип тренировки: %s\nДлительность: %.2f ч.\nДистанция: %.2f км.\nСкорость: %.2f км/ч\nСожгли калорий: %.2f\n",
-				activityType, duration.Hours(), dist, speed, calories,
-			),
-			nil
 
 	default:
 		return "", fmt.Errorf("неизвестный тип тренировки: %q", activityType)
 	}
+
+	return fmt.Sprintf(
+			"Тип тренировки: %s\nДлительность: %.2f ч.\nДистанция: %.2f км.\nСкорость: %.2f км/ч\nСожгли калорий: %.2f\n",
+			activityType, duration.Hours(), dist, speed, calories,
+		),
+		nil
 }
 
 // RunningSpentCalories вычисляет количество калорий, потраченных при беге,
